@@ -8,7 +8,7 @@
 	, freegeoip = require('node-freegeoip');
 
 // Configuration.
-var appUrl = 'https://plex-discord-webhook.herokuapp.com';
+var appUrl = process.env.APP_URL;
 var webhookKey = process.env.DISCORD_WEBHOOK_KEY;
 
 var redisClient = redis.createClient(process.env.REDISCLOUD_URL, { return_buffers: true });
@@ -75,7 +75,7 @@ function notifyDiscord(imageUrl, payload, location, action) {
 		if (location.city) {
 			locationText = ` near ${location.city}, ${(location.country_code === 'US' ? location.region_name : location.country_name)}`;
 		}
-		else {
+		else if (location.len > 0) {
 			locationText = `, ${(location.country_code === 'US' ? location.region_name : location.country_name)}`;
 		}
 	}
@@ -133,7 +133,7 @@ app.post('/', upload.single('thumb'), function (req, res, next) {
 			}
 		}
 
-		if ((payload.event === 'media.scrobble' && isVideo) || payload.event === 'media.rate') {
+		if ((payload.event === 'media.scrobble' && isVideo) || payload.event === 'media.rate' || payload.event === 'media.play') {
 			// Geolocate player.
 			freegeoip.getLocation(payload.Player.publicAddress, function (err, location) {
 				
@@ -142,11 +142,11 @@ app.post('/', upload.single('thumb'), function (req, res, next) {
 					action = 'played';
 				} else {
 					if (payload.rating > 0) {
-						action = 'rated ';
+						action = 'Rated ';
 						for (var i = 0; i < payload.rating / 2; i++)
 							action += '★';
 					} else {
-						action = 'unrated';
+						action = 'Played';
 					}
 				}
 
@@ -162,7 +162,7 @@ app.post('/', upload.single('thumb'), function (req, res, next) {
 						}
 					}
 					else {
-						console.log('location city missing, trying OSM lat lng lookup');
+						console.log('Location city missing, trying OSM lat/lng lookup.');
 
 						var options = {
 							url: `http://nominatim.openstreetmap.org/reverse?format=json&lat=${location.latitude}&lon=${location.longitude}&accept-language=en`,
