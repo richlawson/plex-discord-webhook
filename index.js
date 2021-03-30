@@ -1,6 +1,6 @@
 ﻿var express = require('express')
 	, request = require('request')
-    , multer = require('multer')
+	, multer = require('multer')
 	, redis = require('redis')
 	//, lwip = require('lwip')
 	, jimp = require('jimp')
@@ -136,11 +136,11 @@ app.post('/', upload.single('thumb'), function (req, res, next) {
 		if ((payload.event === 'media.scrobble' && isVideo) || payload.event === 'media.rate' || payload.event === 'media.play') {
 			// Geolocate player.
 			freegeoip.getLocation(payload.Player.publicAddress, function (err, location) {
-				
+
 				var action;
-				if (payload.event === 'media.scrobble') {
+				if (payload.event === 'media.scrobble' || payload.event === 'media.play') {
 					action = 'played';
-				} else {
+				} else if (payload.event === 'media.rate') {
 					if (payload.rating > 0) {
 						action = 'Rated ';
 						for (var i = 0; i < payload.rating / 2; i++)
@@ -149,8 +149,6 @@ app.post('/', upload.single('thumb'), function (req, res, next) {
 						action = 'Played';
 					}
 				}
-
-
 
 				// Send the event to Discord.
 				redisClient.get(key, function (err, reply) {
