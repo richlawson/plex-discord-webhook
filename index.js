@@ -139,7 +139,7 @@ app.post('/', upload.single('thumb'), function (req, res, next) {
 
 				var action;
 				if (payload.event === 'media.scrobble' || payload.event === 'media.play') {
-					action = 'played';
+					action = 'Played';
 				} else if (payload.event === 'media.rate') {
 					if (payload.rating > 0) {
 						action = 'Rated ';
